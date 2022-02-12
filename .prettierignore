@@ -1,0 +1,16 @@
+/**/*.jpg
+/**/*.png
+/**/*.ico
+/**/*.svg
+/**/*.eot
+/**/*.ttf
+/**/*.woff
+/**/*.woff2
+
+.git*
+git*
+.*
+.DS_Store
+
+/dist
+/coverage
