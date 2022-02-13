@@ -5,6 +5,10 @@ import { readFileSync } from 'fs';
 
 const logger = new Logger(__filename);
 
+const ACCESS_TOKEN_KEY_PREFIX = 'access';
+const REFRESH_TOKEN_KEY_PREFIX = 'refresh';
+const prefixes = [ACCESS_TOKEN_KEY_PREFIX, REFRESH_TOKEN_KEY_PREFIX];
+
 function generateRsaKeyPair(): KeyPairSyncResult<string, string> {
   return generateKeyPairSync('rsa', {
     modulusLength: 4096,
@@ -19,7 +23,7 @@ function generateRsaKeyPair(): KeyPairSyncResult<string, string> {
   });
 }
 
-export function generateNewKeyPair(prefixes: string[]): void {
+export function generateNewKeyPair(): void {
   prefixes.forEach((prefix: string) => {
     const keyPair = generateRsaKeyPair();
     fs.writeFileSync(

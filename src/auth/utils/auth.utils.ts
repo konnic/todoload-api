@@ -15,8 +15,6 @@ import User from '../db/user.schema';
 import { TypedRequest } from '../../shared/models';
 
 const logger = new Logger('auth.utils.ts');
-const ACCESS_TOKEN_KEY_PREFIX = 'access';
-const REFRESH_TOKEN_KEY_PREFIX = 'refresh';
 
 const JWT_ALGORITHM = 'RS256';
 
@@ -184,7 +182,7 @@ export async function generateNewKeys(
 
   const isAdmin = jwt.sub == adminUser.get('id');
   if (isAdmin) {
-    generateNewKeyPair([ACCESS_TOKEN_KEY_PREFIX, REFRESH_TOKEN_KEY_PREFIX]);
+    generateNewKeyPair();
   }
   return isAdmin;
 }

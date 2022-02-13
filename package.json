@@ -7,7 +7,7 @@
     "dev": "NODE_ENV=development webpack --stats-error-details",
     "mongo:dev": "mongod --dbpath ../../todo-users-db --quiet",
     "start:dev": "nodemon dist/main.js",
-    "build": "webpack --stats-error-details",
+    "build": "NODE_ENV=production webpack --stats-error-details && node keygen.js",
     "start": "node dist/main.js"
   },
   "author": "",
