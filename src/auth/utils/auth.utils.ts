@@ -1,34 +1,22 @@
-import { readFileSync } from 'fs';
 import { sign, verify, TokenExpiredError } from 'jsonwebtoken';
 import { compare, hash, genSalt } from 'bcrypt';
 import { Logger } from '../../app/app.utils';
 import { Response, NextFunction } from 'express';
 import { Cookie, JWT } from '../models';
 import { handleErrorWithStatus } from '../../app/app.utils';
-import { generateNewKeyPair } from './key.utils';
+import {
+  generateNewKeyPair,
+  PRIV_KEY_ACCESS_TOKEN,
+  PRIV_KEY_REFRESH_TOKEN,
+  PUB_KEY_ACCESS_TOKEN,
+  PUB_KEY_REFRESH_TOKEN,
+} from './key.utils';
 import User from '../db/user.schema';
 import { TypedRequest } from '../../shared/models';
 
 const logger = new Logger('auth.utils.ts');
 const ACCESS_TOKEN_KEY_PREFIX = 'access';
 const REFRESH_TOKEN_KEY_PREFIX = 'refresh';
-
-const PUB_KEY_ACCESS_TOKEN = readFileSync(
-  __dirname + '/../../../keys/access_rsa_pub.pem',
-  'utf8'
-);
-const PRIV_KEY_ACCESS_TOKEN = readFileSync(
-  __dirname + '/../../../keys/access_rsa_priv.pem',
-  'utf8'
-);
-const PUB_KEY_REFRESH_TOKEN = readFileSync(
-  __dirname + '/../../../keys/refresh_rsa_pub.pem',
-  'utf8'
-);
-const PRIV_KEY_REFRESH_TOKEN = readFileSync(
-  __dirname + '/../../../keys/refresh_rsa_priv.pem',
-  'utf8'
-);
 
 const JWT_ALGORITHM = 'RS256';
 

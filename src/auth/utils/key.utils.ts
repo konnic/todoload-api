@@ -1,6 +1,7 @@
 import { generateKeyPairSync, KeyPairSyncResult } from 'crypto';
 import * as fs from 'fs';
 import { Logger } from '../../app/app.utils';
+import { readFileSync } from 'fs';
 
 const logger = new Logger(__filename);
 
@@ -30,7 +31,24 @@ export function generateNewKeyPair(prefixes: string[]): void {
       keyPair.privateKey
     );
     logger.log(
-      `[generateKeyPairSync] Generated new ${prefix}_rsa key pair into directory: ${__dirname}/keys`
+      `[generateNewKeyPair] Generated new ${prefix}_rsa key pair into directory: ${__dirname}/keys`
     );
   });
 }
+
+export const PUB_KEY_ACCESS_TOKEN = readFileSync(
+  __dirname + `/keys/access_rsa_pub.pem`,
+  'utf8'
+);
+export const PRIV_KEY_ACCESS_TOKEN = readFileSync(
+  __dirname + `/keys/access_rsa_priv.pem`,
+  'utf8'
+);
+export const PUB_KEY_REFRESH_TOKEN = readFileSync(
+  __dirname + `/keys/refresh_rsa_pub.pem`,
+  'utf8'
+);
+export const PRIV_KEY_REFRESH_TOKEN = readFileSync(
+  __dirname + `/keys/refresh_rsa_priv.pem`,
+  'utf8'
+);

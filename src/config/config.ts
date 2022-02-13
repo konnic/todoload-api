@@ -35,3 +35,9 @@ export const getAppDbConfig = (): PoolConfig => {
     port: +APP_DB_PORT,
   };
 };
+
+type Environemnt = 'production' | 'development';
+export const environment: Environemnt =
+  (process.env.NODE_ENV as Environemnt) ?? 'development';
+
+const test = 'hellox';
