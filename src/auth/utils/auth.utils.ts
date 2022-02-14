@@ -4,19 +4,16 @@ import { Logger } from '../../app/app.utils';
 import { Response, NextFunction } from 'express';
 import { Cookie, JWT } from '../models';
 import { handleErrorWithStatus } from '../../app/app.utils';
-import {
-  generateNewKeyPair,
-  PRIV_KEY_ACCESS_TOKEN,
-  PRIV_KEY_REFRESH_TOKEN,
-  PUB_KEY_ACCESS_TOKEN,
-  PUB_KEY_REFRESH_TOKEN,
-} from './key.utils';
-import User from '../db/user.schema';
 import { TypedRequest } from '../../shared/models';
+import { getSecretByKey } from '../../config/config';
 
 const logger = new Logger('auth.utils.ts');
 
 const JWT_ALGORITHM = 'RS256';
+const PUB_KEY_ACCESS_TOKEN = getSecretByKey('PUB_KEY_ACCESS_TOKEN');
+const PRIV_KEY_ACCESS_TOKEN = getSecretByKey('PRIV_KEY_ACCESS_TOKEN');
+const PUB_KEY_REFRESH_TOKEN = getSecretByKey('PUB_KEY_REFRESH_TOKEN');
+const PRIV_KEY_REFRESH_TOKEN = getSecretByKey('PRIV_KEY_REFRESH_TOKEN');
 
 export async function isPasswordValid(
   password: string,
@@ -29,14 +26,17 @@ export async function generatePassword(password: string): Promise<string> {
   return hash(password, await genSalt());
 }
 
-export async function issueAccessToken(userId: string) {
+export async function issueToken(
+  userId: string,
+  type: 'access' | 'refresh'
+): Promise<string> {
   return new Promise<string>((resolve, reject) =>
     sign(
       { sub: userId },
-      PRIV_KEY_ACCESS_TOKEN,
+      type === 'access' ? PRIV_KEY_ACCESS_TOKEN : PRIV_KEY_REFRESH_TOKEN,
       {
         algorithm: JWT_ALGORITHM,
-        expiresIn: '1m',
+        expiresIn: type === 'access' ? '1d' : '90d',
       },
       (e: Error, encoded: string) => (encoded ? resolve(encoded) : reject(e))
     )
@@ -66,17 +66,26 @@ export async function issueNewAuthCookies(
   next?: NextFunction,
   send = false
 ): Promise<void> {
-  Promise.all([issueAccessToken(userId), issueRefreshToken(userId)]).then(
+  Promise.all([
+    issueToken(userId, 'access'),
+    issueToken(userId, 'refresh'),
+  ]).then(
     async (tokens: [string, string]) => {
       const [accessToken, refreshToken] = tokens;
-      const accessTokenExpiry = await verifyToken(
-        accessToken,
-        PUB_KEY_ACCESS_TOKEN
-      ).then((jwt: JWT) => jwt.exp);
-      const refreshTokenExpiry = await verifyToken(
-        refreshToken,
-        PUB_KEY_REFRESH_TOKEN
-      ).then((jwt: JWT) => jwt.exp);
+      let accessTokenExpiry: number;
+      let refreshTokenExpiry: number;
+      try {
+        accessTokenExpiry = await verifyToken(
+          accessToken,
+          PUB_KEY_ACCESS_TOKEN
+        ).then((jwt: JWT) => jwt.exp);
+        refreshTokenExpiry = await verifyToken(
+          refreshToken,
+          PUB_KEY_REFRESH_TOKEN
+        ).then((jwt: JWT) => jwt.exp);
+      } catch (error) {
+        logger.log('[issueNewAuthCookies]', error);
+      }
 
       res
         .cookie('accessToken', accessToken, {
@@ -141,20 +150,6 @@ export async function verifyAccessToken(
     });
 }
 
-export async function issueRefreshToken(userId: string): Promise<string> {
-  return new Promise<string>((resolve, reject) =>
-    sign(
-      { sub: userId },
-      PRIV_KEY_REFRESH_TOKEN,
-      {
-        algorithm: JWT_ALGORITHM,
-        expiresIn: '90d',
-      },
-      (e: Error, encoded: string) => (encoded ? resolve(encoded) : reject(e))
-    )
-  );
-}
-
 export async function verifyToken(token: string, key: string): Promise<JWT> {
   return new Promise((resolve, reject) =>
     verify(
@@ -166,23 +161,23 @@ export async function verifyToken(token: string, key: string): Promise<JWT> {
   );
 }
 
-export async function generateNewKeys(
-  req: TypedRequest<null>
-): Promise<boolean> {
-  const accessToken = getCookieValue(req, Cookie.AccessToken);
-  if (!accessToken) return false;
+// export async function generateNewKeys(
+//   req: TypedRequest<null>
+// ): Promise<boolean> {
+//   const accessToken = getCookieValue(req, Cookie.AccessToken);
+//   if (!accessToken) return false;
 
-  const jwt: JWT | void = await verifyToken(
-    accessToken,
-    PUB_KEY_ACCESS_TOKEN
-  ).catch((e) => logger.log('[generateNewKeys]', e));
-  const adminUser = await User.findOne({ email: 'admin' });
+//   const jwt: JWT | void = await verifyToken(
+//     accessToken,
+//     PUB_KEY_ACCESS_TOKEN
+//   ).catch((e) => logger.log('[generateNewKeys]', e));
+//   const adminUser = await User.findOne({ email: 'admin' });
 
-  if (!jwt || !adminUser) return false;
+//   if (!jwt || !adminUser) return false;
 
-  const isAdmin = jwt.sub == adminUser.get('id');
-  if (isAdmin) {
-    generateNewKeyPair();
-  }
-  return isAdmin;
-}
+//   const isAdmin = jwt.sub == adminUser.get('id');
+//   if (isAdmin) {
+//     generateNewKeyPair();
+//   }
+//   return isAdmin;
+// }

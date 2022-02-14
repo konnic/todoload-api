@@ -8,6 +8,10 @@ export const loadConfig = (): DotenvConfigOutput => {
   return config;
 };
 
+type Environemnt = 'production' | 'development';
+export const environment: Environemnt =
+  (process.env.NODE_ENV as Environemnt) ?? 'development';
+
 export const getAuthDbConfig = (): string => {
   if (!config) loadConfig();
 
@@ -36,8 +40,19 @@ export const getAppDbConfig = (): PoolConfig => {
   };
 };
 
-type Environemnt = 'production' | 'development';
-export const environment: Environemnt =
-  (process.env.NODE_ENV as Environemnt) ?? 'development';
+type Secrets = {
+  PUB_KEY_ACCESS_TOKEN: string;
+  PRIV_KEY_ACCESS_TOKEN: string;
+  PUB_KEY_REFRESH_TOKEN: string;
+  PRIV_KEY_REFRESH_TOKEN: string;
+};
+export const getSecrets = (): Secrets => {
+  if (!config) loadConfig();
 
-const test = 'hellox';
+  return JSON.parse(process.env.SECRETS);
+};
+export const getSecretByKey = (key: keyof Secrets): string => {
+  if (!config) loadConfig();
+
+  return JSON.parse(process.env.SECRETS)[key];
+};

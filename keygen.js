@@ -1,10 +1,6 @@
 const crypto = require('crypto');
 const fs = require('fs');
 
-const ACCESS_TOKEN_KEY_PREFIX = 'access';
-const REFRESH_TOKEN_KEY_PREFIX = 'refresh';
-const prefixes = [ACCESS_TOKEN_KEY_PREFIX, REFRESH_TOKEN_KEY_PREFIX];
-
 function generateRsaKeyPair() {
   return crypto.generateKeyPairSync('rsa', {
     modulusLength: 4096,
@@ -19,33 +15,42 @@ function generateRsaKeyPair() {
   });
 }
 
-function generateNewKeyPairIfNoneIsPresent() {
-  fs.stat('dist/keys', (err, stats) => {
-    if (stats) {
-      console.log('dist/keys exists, no need to generate a new key pair');
-    }
-
-    if (err) {
-      console.log('dist/keys does not exists, generating new key pair');
-
-      fs.mkdirSync('dist/keys');
-
-      prefixes.forEach((prefix) => {
-        const keyPair = generateRsaKeyPair();
-        fs.writeFileSync(
-          __dirname + `/dist/keys/${prefix}_rsa_pub.pem`,
-          keyPair.publicKey
-        );
-        fs.writeFileSync(
-          __dirname + `/dist/keys/${prefix}_rsa_priv.pem`,
-          keyPair.privateKey
-        );
-        console.log(
-          `[generateNewKeyPair] Generated new ${prefix}_rsa key pair into directory: ${__dirname}dist/keys`
-        );
-      });
-    }
+function createDotEnvBackup(data) {
+  fs.writeFile('backup.env', data, (err) => {
+    if (err) console.log(err);
   });
 }
 
-generateNewKeyPairIfNoneIsPresent();
+function generateNewSecrets() {
+  fs.readFile('.env', (err, data) => {
+    createDotEnvBackup(data);
+
+    const fileContents = Buffer.from(data).toString();
+    const [keep, drop] = fileContents.split('SECRETS=');
+
+    const accessToken = generateRsaKeyPair();
+    const refreshToken = generateRsaKeyPair();
+    const secrets = {
+      PUB_KEY_ACCESS_TOKEN: accessToken.publicKey,
+      PRIV_KEY_ACCESS_TOKEN: accessToken.privateKey,
+      PUB_KEY_REFRESH_TOKEN: refreshToken.publicKey,
+      PRIV_KEY_REFRESH_TOKEN: refreshToken.privateKey,
+    };
+    const stringifiedSecrets = JSON.stringify(secrets);
+
+    const fileOutput = `${keep}SECRETS=${stringifiedSecrets}`;
+    const buffer = Buffer.from(fileOutput, 'utf-8');
+
+    fs.writeFile('.env', buffer, (err) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(
+          '[generateNewSecrets] Generated new new secrets for .env file'
+        );
+      }
+    });
+  });
+}
+
+generateNewSecrets();

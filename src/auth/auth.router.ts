@@ -58,8 +58,8 @@ authRouter.delete('/logout', (req: TypedRequest<null>, res: Response) => {
   res.clearCookie('accessToken').clearCookie('refreshToken').sendStatus(204);
 });
 
-authRouter.post('/keys', async (req: TypedRequest<null>, res: Response) =>
-  res.sendStatus((await authUtils.generateNewKeys(req)) ? 201 : 403)
-);
+// authRouter.post('/keys', async (req: TypedRequest<null>, res: Response) =>
+//   res.sendStatus((await authUtils.generateNewKeys(req)) ? 201 : 403)
+// );
 
 export default authRouter;
