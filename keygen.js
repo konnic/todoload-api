@@ -33,7 +33,7 @@ function generateNewSecrets() {
   const stringifiedSecrets = JSON.stringify(secrets);
 
   if (process.env.NODE_ENV === 'production') {
-    const command = `heroku config:set SECRETS=${stringifiedSecrets}`;
+    const command = `heroku config:set SECRETS=${stringifiedSecrets} -a todoload-api`;
     try {
       const process = require('child_process').spawn('pbcopy');
       process.stdin.write(command);
