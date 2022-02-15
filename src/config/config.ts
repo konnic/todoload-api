@@ -16,8 +16,8 @@ export const getAuthDbConfig = (): string => {
   if (!config) loadConfig();
 
   return process.env.NODE_ENV === 'production'
-    ? process.env.DB_STRING_PROD
-    : process.env.DB_STRING;
+    ? process.env.AUTH_DB_PROD
+    : process.env.AUTH_DB;
 };
 
 export const getAppDbConfig = (): PoolConfig => {

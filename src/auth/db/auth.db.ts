@@ -15,5 +15,5 @@ const logger = new Logger('auth.db.ts');
 
 export const connectAuthDb = (config: string) =>
   connect(config)
-    .then(() => logger.log('Connected to todo-auth Mongo DB'))
+    .then(() => logger.log('Connected to todo-auth Mongo DB (updated)'))
     .catch((e) => logger.log('Connection to todo-auth Mongo DB failed', e));
