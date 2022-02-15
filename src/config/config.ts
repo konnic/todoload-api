@@ -8,9 +8,12 @@ export const loadConfig = (): DotenvConfigOutput => {
   return config;
 };
 
-type Environemnt = 'production' | 'development';
-export const environment: Environemnt =
-  (process.env.NODE_ENV as Environemnt) ?? 'development';
+type Environemnt = {
+  production: boolean;
+};
+export const env = {
+  production: process.env.NODE_ENV === 'production',
+};
 
 export const getAuthDbConfig = (): string => {
   if (!config) loadConfig();
