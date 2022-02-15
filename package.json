@@ -5,11 +5,12 @@
   "private": true,
   "scripts": {
     "dev": "NODE_ENV=development webpack --stats-error-details",
-    "load-keys:dev": "",
+    "keygen": "NODE_ENV=production node keygen.js",
+    "keygen:dev": "NODE_ENV=development node keygen.js",
     "mongo:dev": "mongod --dbpath ../../todo-users-db --quiet",
+    "start": "node dist/main.js",
     "start:dev": "nodemon dist/main.js",
-    "build": "NODE_ENV=production webpack --stats-error-details && node keygen.js",
-    "start": "node dist/main.js"
+    "build": "NODE_ENV=production webpack --stats-error-details && node keygen.js"
   },
   "author": "",
   "license": "ISC",

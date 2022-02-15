@@ -22,35 +22,51 @@ function createDotEnvBackup(data) {
 }
 
 function generateNewSecrets() {
-  fs.readFile('.env', (err, data) => {
-    createDotEnvBackup(data);
+  const accessToken = generateRsaKeyPair();
+  const refreshToken = generateRsaKeyPair();
+  const secrets = {
+    PUB_KEY_ACCESS_TOKEN: accessToken.publicKey,
+    PRIV_KEY_ACCESS_TOKEN: accessToken.privateKey,
+    PUB_KEY_REFRESH_TOKEN: refreshToken.publicKey,
+    PRIV_KEY_REFRESH_TOKEN: refreshToken.privateKey,
+  };
+  const stringifiedSecrets = JSON.stringify(secrets);
 
-    const fileContents = Buffer.from(data).toString();
-    const [keep, drop] = fileContents.split('SECRETS=');
+  if (process.env.NODE_ENV === 'production') {
+    const command = `heroku config:set SECRETS=${stringifiedSecrets}`;
+    try {
+      const process = require('child_process').spawn('pbcopy');
+      process.stdin.write(command);
+      process.stdin.end();
+      console.log(
+        '###############################################################\n# Successfully copied heroku config:set command to clipboard! #\n###############################################################'
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
-    const accessToken = generateRsaKeyPair();
-    const refreshToken = generateRsaKeyPair();
-    const secrets = {
-      PUB_KEY_ACCESS_TOKEN: accessToken.publicKey,
-      PRIV_KEY_ACCESS_TOKEN: accessToken.privateKey,
-      PUB_KEY_REFRESH_TOKEN: refreshToken.publicKey,
-      PRIV_KEY_REFRESH_TOKEN: refreshToken.privateKey,
-    };
-    const stringifiedSecrets = JSON.stringify(secrets);
+  if (process.env.NODE_ENV === 'development') {
+    fs.readFile('.env', (err, data) => {
+      createDotEnvBackup(data);
 
-    const fileOutput = `${keep}SECRETS=${stringifiedSecrets}`;
-    const buffer = Buffer.from(fileOutput, 'utf-8');
+      const fileContents = Buffer.from(data).toString();
+      const [keep, drop] = fileContents.split('SECRETS=');
 
-    fs.writeFile('.env', buffer, (err) => {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log(
-          '[generateNewSecrets] Generated new new secrets for .env file'
-        );
-      }
+      const fileOutput = `${keep}SECRETS=${stringifiedSecrets}`;
+      const buffer = Buffer.from(fileOutput, 'utf-8');
+
+      fs.writeFile('.env', buffer, (err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log(
+            '[generateNewSecrets] Generated new new secrets for .env file'
+          );
+        }
+      });
     });
-  });
+  }
 }
 
 generateNewSecrets();
