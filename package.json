@@ -10,7 +10,7 @@
     "mongo:dev": "mongod --dbpath ../../todo-users-db --quiet",
     "start": "node dist/main.js",
     "start:dev": "nodemon dist/main.js",
-    "build": "NODE_ENV=production webpack --stats-error-details && node keygen.js"
+    "build": "NODE_ENV=production webpack --stats-error-details"
   },
   "author": "",
   "license": "ISC",
