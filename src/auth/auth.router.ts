@@ -50,7 +50,7 @@ authRouter.post('/login', async (req: TypedRequest<AppUser>, res: Response) => {
     .then(async (user) => {
       if (!user) {
         res
-          .sendStatus(401)
+          .status(401)
           .json({ message: `Could not find user with email: ${email}.` });
         return;
       }
