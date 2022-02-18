@@ -40,14 +40,21 @@ authRouter.post(
 
 authRouter.post('/login', async (req: TypedRequest<AppUser>, res: Response) => {
   const { email, password } = req.body;
+
+  if (!(email && password)) {
+    res.sendStatus(401);
+    return;
+  }
+
   User.findOne({ email })
     .then(async (user) => {
       if (!user) {
         res
-          .status(401)
+          .sendStatus(401)
           .json({ message: `Could not find user with email: ${email}.` });
+        return;
       }
-      (await authUtils.isPasswordValid(password, user.password))
+      (await authUtils.isPasswordValid(password, user?.password))
         ? loginUser(req, res, user.get('id'), 200)
         : res.status(401).json({ message: 'Wrong password.' });
     })
