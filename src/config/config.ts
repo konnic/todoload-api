@@ -52,6 +52,9 @@ type Secrets = {
 export const getSecretByKey = (key: keyof Secrets): string => {
   if (!config) loadConfig();
 
-  console.log([`getSecretByKey(${key})`], process.env[key]);
-  return JSON.parse(process.env[key])[key];
+  const getSecretByKey = decodeFromBase64(process.env[key]);
+  console.log(key, {getSecretByKey})
+  return decodeFromBase64(process.env[key])
 };
+
+const decodeFromBase64 = (data: string): string => Buffer.from(data, 'base64').toString();
