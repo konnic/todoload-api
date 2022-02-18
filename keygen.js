@@ -24,16 +24,21 @@ function createDotEnvBackup(data) {
 function generateNewSecrets() {
   const accessToken = generateRsaKeyPair();
   const refreshToken = generateRsaKeyPair();
-  const secrets = {
+  const PUB_KEY_ACCESS_TOKEN = JSON.stringify({
     PUB_KEY_ACCESS_TOKEN: accessToken.publicKey,
+  });
+  const PRIV_KEY_ACCESS_TOKEN = JSON.stringify({
     PRIV_KEY_ACCESS_TOKEN: accessToken.privateKey,
+  });
+  const PUB_KEY_REFRESH_TOKEN = JSON.stringify({
     PUB_KEY_REFRESH_TOKEN: refreshToken.publicKey,
+  });
+  const PRIV_KEY_REFRESH_TOKEN = JSON.stringify({
     PRIV_KEY_REFRESH_TOKEN: refreshToken.privateKey,
-  };
-  const stringifiedSecrets = JSON.stringify(secrets);
+  });
 
   if (process.env.NODE_ENV === 'production') {
-    const command = `heroku config:set SECRETS=${stringifiedSecrets} -a todoload-api`;
+    const command = `heroku config:set PUB_KEY_ACCESS_TOKEN=${PUB_KEY_ACCESS_TOKEN} PRIV_KEY_ACCESS_TOKEN=${PRIV_KEY_ACCESS_TOKEN} PUB_KEY_REFRESH_TOKEN=${PUB_KEY_REFRESH_TOKEN} PRIV_KEY_REFRESH_TOKEN=${PRIV_KEY_REFRESH_TOKEN} -a todoload-api`;
     try {
       const process = require('child_process').spawn('pbcopy');
       process.stdin.write(command);
@@ -51,9 +56,10 @@ function generateNewSecrets() {
       createDotEnvBackup(data);
 
       const fileContents = Buffer.from(data).toString();
-      const [keep, drop] = fileContents.split('SECRETS=');
+      const [keep, drop] = fileContents.split('# SECRETS');
+      const append = `PUB_KEY_ACCESS_TOKEN=${PUB_KEY_ACCESS_TOKEN}\nPRIV_KEY_ACCESS_TOKEN=${PRIV_KEY_ACCESS_TOKEN}\nPUB_KEY_REFRESH_TOKEN=${PUB_KEY_REFRESH_TOKEN}\nPRIV_KEY_REFRESH_TOKEN=${PRIV_KEY_REFRESH_TOKEN}`;
 
-      const fileOutput = `${keep}SECRETS=${stringifiedSecrets}`;
+      const fileOutput = `${keep}# SECRETS\n${append}`;
       const buffer = Buffer.from(fileOutput, 'utf-8');
 
       fs.writeFile('.env', buffer, (err) => {

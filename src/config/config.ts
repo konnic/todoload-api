@@ -49,13 +49,8 @@ type Secrets = {
   PUB_KEY_REFRESH_TOKEN: string;
   PRIV_KEY_REFRESH_TOKEN: string;
 };
-export const getSecrets = (): Secrets => {
-  if (!config) loadConfig();
-
-  return JSON.parse(process.env.SECRETS);
-};
 export const getSecretByKey = (key: keyof Secrets): string => {
   if (!config) loadConfig();
 
-  return JSON.parse(process.env.SECRETS)[key];
+  return JSON.parse(process.env[key])[key];
 };

@@ -1,5 +1,6 @@
 import { connect } from 'mongoose';
 import { Logger } from '../../app/app.utils';
+import { env } from '../../config/config';
 
 const logger = new Logger('auth.db.ts');
 
@@ -13,7 +14,13 @@ const logger = new Logger('auth.db.ts');
  * https://www.mongodb.com/developer/quickstart/cheat-sheet/
  */
 
-export const connectAuthDb = (config: string) =>
-  connect(config)
-    .then(() => logger.log('Connected to todo-auth Mongo DB (updated)'))
+export const connectAuthDb = (uri: string) =>
+  connect(uri)
+    .then(() =>
+      logger.log(
+        env.production
+          ? 'Connected to todoload-users on MongoDB Atlas'
+          : 'Connected to todo-auth MongoDB on localhost'
+      )
+    )
     .catch((e) => logger.log('Connection to todo-auth Mongo DB failed', e));
