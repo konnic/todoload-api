@@ -52,5 +52,6 @@ type Secrets = {
 export const getSecretByKey = (key: keyof Secrets): string => {
   if (!config) loadConfig();
 
+  console.log([`getSecretByKey(${key})`], process.env[key]);
   return JSON.parse(process.env[key])[key];
 };
