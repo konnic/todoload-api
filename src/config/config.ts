@@ -23,24 +23,23 @@ export const getAuthDbConfig = (): string => {
     : process.env.AUTH_DB;
 };
 
-export const getAppDbConfig = (): PoolConfig => {
+export const getAppDbConfig = (isProduction: boolean): PoolConfig => {
   if (!config) loadConfig();
 
-  const {
-    APP_DB_NAME,
-    APP_DB_USER,
-    APP_DB_PASSWORD,
-    APP_DB_HOST,
-    APP_DB_PORT,
-  } = process.env;
-
-  return {
-    user: APP_DB_USER,
-    password: APP_DB_PASSWORD,
-    database: APP_DB_NAME,
-    host: APP_DB_HOST,
-    port: +APP_DB_PORT,
-  };
+  return isProduction
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      }
+    : {
+        user: process.env.APP_DB_USER,
+        password: process.env.APP_DB_PASSWORD,
+        database: process.env.APP_DB_NAME,
+        host: process.env.APP_DB_HOST,
+        port: +process.env.APP_DB_PORT,
+      };
 };
 
 type Secrets = {

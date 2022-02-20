@@ -1,4 +1,3 @@
-import { getAppDbConfig } from './../../config/config';
 import {
   handleErrorWithStatus,
   isValidRequestBody,

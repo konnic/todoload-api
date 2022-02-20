@@ -4,21 +4,23 @@ import { Logger } from '../app.utils';
 
 const logger = new Logger('app.db.ts');
 
-const config = getAppDbConfig();
-const pool = new Pool(getAppDbConfig());
+const config = getAppDbConfig(env.production);
+const pool = new Pool(config);
 
-if (!env.production) {
-  pool
-    .connect()
-    .then(() =>
-      logger.log(`Connected to PostgreSQL database ${config.database}.`)
+pool
+  .connect()
+  .then(() =>
+    logger.log(
+      `Connected to PostgreSQL database ${config.database || 'on Heroku'}.`
     )
-    .catch((e: Error) =>
-      logger.log(
-        `Connecting to PostgreSQL database ${config.database} failed.`,
-        e
-      )
-    );
-}
+  )
+  .catch((e: Error) =>
+    logger.log(
+      `Connecting to PostgreSQL database ${
+        config.database || 'on Heroku'
+      } failed.`,
+      e
+    )
+  );
 
 export default pool;

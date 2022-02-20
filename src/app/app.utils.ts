@@ -20,8 +20,8 @@ export class Logger {
    */
   public log(message: string, error?: Error): void {
     error
-      ? console.log(`[${this.origin}]: ${message}`, error)
-      : console.log(`[${this.origin}]: ${message}`);
+      ? console.log(`***** [${this.origin}] *****: ${message}`, error)
+      : console.log(`***** [${this.origin}] *****: ${message}`);
   }
 }
 
