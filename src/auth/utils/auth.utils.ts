@@ -47,8 +47,8 @@ export function getCookieValue(
   req: TypedRequest<unknown>,
   cookieName: Cookie
 ): string {
-  const cookies: string[] = req.headers.cookie.split('; ');
-  const cookie: string = cookies.find((cookie: string) =>
+  const cookies: string[] = req?.headers?.cookie?.split('; ');
+  const cookie: string = cookies?.find((cookie: string) =>
     cookie.startsWith(cookieName)
   );
   return cookie ? cookie.split(`${cookieName}=`)[1] : null;
