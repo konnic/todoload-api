@@ -5,6 +5,8 @@ import router from './router';
 import { Logger } from './app/app.utils';
 import { getAuthDbConfig, loadConfig } from './config/config';
 
+// const corsOptions: cors.CorsOptions = {}
+
 loadConfig();
 connectAuthDb(getAuthDbConfig());
 

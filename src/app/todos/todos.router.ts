@@ -25,6 +25,7 @@ import {
   updateTodoRequestAllProps,
 } from './models';
 import pool from '../db/app.db';
+import cors from 'cors';
 
 // import { Pool, PoolConfig } from 'pg';
 
@@ -46,6 +47,7 @@ const logger = new Logger(__filename);
 
 const todosRouter = Router();
 todosRouter.use(authUtils.verifyAccessToken);
+todosRouter.use(cors());
 
 /**
  * Get all todos.
