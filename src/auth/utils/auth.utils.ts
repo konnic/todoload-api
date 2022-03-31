@@ -87,6 +87,18 @@ export async function issueNewAuthCookies(
         logger.log('[issueNewAuthCookies]', error);
       }
 
+      // export interface CookieOptions {
+      //   maxAge?: number | undefined;
+      //   signed?: boolean | undefined;
+      //   expires?: Date | undefined;
+      //   httpOnly?: boolean | undefined;
+      //   path?: string | undefined;
+      //   domain?: string | undefined;
+      //   secure?: boolean | undefined;
+      //   encode?: ((val: string) => string) | undefined;
+      //   sameSite?: boolean | 'lax' | 'strict' | 'none' | undefined;
+      // }
+
       res
         .cookie('accessToken', accessToken, {
           secure: false,
@@ -97,6 +109,13 @@ export async function issueNewAuthCookies(
           secure: false,
           httpOnly: true,
           expires: new Date(refreshTokenExpiry * 1000),
+        })
+        .cookie('accessToken_v2', accessToken, {
+          secure: false,
+          httpOnly: false,
+          expires: new Date(accessTokenExpiry * 1000),
+          domain: 'todoload-api.herokuapp.com',
+          sameSite: 'lax',
         });
       req.userId = userId;
       if (next) next();
