@@ -115,7 +115,13 @@ export async function issueNewAuthCookies(
           httpOnly: false,
           expires: new Date(accessTokenExpiry * 1000),
           domain: 'todoload-api.herokuapp.com',
-          sameSite: 'lax',
+          sameSite: 'none',
+        })
+        .cookie('accessToken_v3', accessToken, {
+          httpOnly: false,
+          expires: new Date(accessTokenExpiry * 1000),
+          domain: 'todoload-api.herokuapp.com',
+          sameSite: 'none',
         });
       req.userId = userId;
       if (next) next();
