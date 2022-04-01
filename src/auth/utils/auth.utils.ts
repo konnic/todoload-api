@@ -100,6 +100,15 @@ export async function issueNewAuthCookies(
       // }
 
       res
+        .cookie('todoload', 'todoloadValue', {
+          httpOnly: true,
+          domain: 'todoload-api.herokuapp.com',
+          secure: true,
+          sameSite: 'lax',
+        })
+        .cookie('todoload_2', 'todoloadValue', {
+          domain: 'todoload-api.herokuapp.com',
+        })
         .cookie('accessToken', accessToken, {
           secure: false,
           httpOnly: true,
@@ -109,19 +118,6 @@ export async function issueNewAuthCookies(
           secure: false,
           httpOnly: true,
           expires: new Date(refreshTokenExpiry * 1000),
-        })
-        .cookie('accessToken_v2', accessToken, {
-          secure: false,
-          httpOnly: false,
-          expires: new Date(accessTokenExpiry * 1000),
-          domain: 'todoload-api.herokuapp.com',
-          sameSite: 'none',
-        })
-        .cookie('accessToken_v3', accessToken, {
-          httpOnly: false,
-          expires: new Date(accessTokenExpiry * 1000),
-          domain: 'todoload-api.herokuapp.com',
-          sameSite: 'none',
         });
       req.userId = userId;
       if (next) next();
