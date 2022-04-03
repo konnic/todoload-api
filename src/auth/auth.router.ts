@@ -15,7 +15,7 @@ async function loginUser(
   status: number
 ): Promise<void> {
   res.status(status);
-  authUtils.issueNewAuthCookies(userId, req, res, null, true);
+  authUtils.issueNewAuthTokens(userId, req, res, () => res.send());
 }
 
 authRouter.post(
@@ -65,8 +65,16 @@ authRouter.delete('/logout', (req: TypedRequest<null>, res: Response) => {
   res.clearCookie('accessToken').clearCookie('refreshToken').sendStatus(204);
 });
 
-// authRouter.post('/keys', async (req: TypedRequest<null>, res: Response) =>
-//   res.sendStatus((await authUtils.generateNewKeys(req)) ? 201 : 403)
-// );
+authRouter.post(
+  '/refresh-tokens',
+  (req: TypedRequest<{ refreshToken: string }>, res: Response) => {
+    authUtils.issueAuthTokensFromRefreshToken(
+      req.body.refreshToken,
+      req,
+      res,
+      res.send
+    );
+  }
+);
 
 export default authRouter;

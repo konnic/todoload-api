@@ -54,17 +54,27 @@ export function getCookieValue(
   return cookie ? cookie.split(`${cookieName}=`)[1] : null;
 }
 
+export function getAuthHeaderValue(req: TypedRequest<unknown>): string {
+  const bearerToken = req.headers.authorization;
+  return bearerToken.split('Bearer ')[1];
+}
+
+async function getTokenExpiry(token: string, pubKey: string): Promise<number> {
+  return verifyToken(token, pubKey)
+    .then((jwt: JWT) => jwt.exp)
+    .catch(() => 0);
+}
+
 /**
  * Issues a new access and refresh token and appends them as auth cookies to the response object.
  * @param userId - userId
  * @param res - response
  */
-export async function issueNewAuthCookies(
+export async function issueNewAuthTokens(
   userId: string,
   req: TypedRequest<unknown>,
   res: Response,
-  next?: NextFunction,
-  send = false
+  callback: Function
 ): Promise<void> {
   Promise.all([
     issueToken(userId, 'access'),
@@ -72,78 +82,55 @@ export async function issueNewAuthCookies(
   ]).then(
     async (tokens: [string, string]) => {
       const [accessToken, refreshToken] = tokens;
-      let accessTokenExpiry: number;
-      let refreshTokenExpiry: number;
-      try {
-        accessTokenExpiry = await verifyToken(
+      const isIos: boolean = req.headers?.todoload_client === 'ios';
+
+      if (isIos) {
+        res.json({
           accessToken,
-          PUB_KEY_ACCESS_TOKEN
-        ).then((jwt: JWT) => jwt.exp);
-        refreshTokenExpiry = await verifyToken(
           refreshToken,
-          PUB_KEY_REFRESH_TOKEN
-        ).then((jwt: JWT) => jwt.exp);
-      } catch (error) {
-        logger.log('[issueNewAuthCookies]', error);
-      }
-
-      // export interface CookieOptions {
-      //   maxAge?: number | undefined;
-      //   signed?: boolean | undefined;
-      //   expires?: Date | undefined;
-      //   httpOnly?: boolean | undefined;
-      //   path?: string | undefined;
-      //   domain?: string | undefined;
-      //   secure?: boolean | undefined;
-      //   encode?: ((val: string) => string) | undefined;
-      //   sameSite?: boolean | 'lax' | 'strict' | 'none' | undefined;
-      // }
-
-      res
-        .cookie('todoload', 'todoloadValue', {
-          httpOnly: true,
-          domain: 'todoload-api.herokuapp.com',
-          secure: true,
-          sameSite: 'lax',
-        })
-        .cookie('todoload_2', 'todoloadValue', {
-          domain: 'todoload-api.herokuapp.com',
-        })
-        .cookie('accessToken', accessToken, {
-          secure: false,
-          httpOnly: true,
-          expires: new Date(accessTokenExpiry * 1000),
-        })
-        .cookie('refreshToken', refreshToken, {
-          secure: false,
-          httpOnly: true,
-          expires: new Date(refreshTokenExpiry * 1000),
         });
-      req.userId = userId;
-      if (next) next();
-      if (send) res.send();
+      } else {
+        res
+          .cookie('accessToken', accessToken, {
+            secure: false,
+            httpOnly: true,
+            expires: new Date(
+              (await getTokenExpiry(accessToken, PUB_KEY_ACCESS_TOKEN)) * 1000
+            ),
+          })
+          .cookie('refreshToken', refreshToken, {
+            secure: false,
+            httpOnly: true,
+            expires: new Date(
+              (await getTokenExpiry(refreshToken, PUB_KEY_REFRESH_TOKEN)) * 1000
+            ),
+          });
+        req.userId = userId;
+        callback();
+      }
     },
     (e) => handleErrorWithStatus(500, e, req, res, logger)
   );
 }
 
-export async function issueAuthCookiesFromRefreshToken(
+export async function issueAuthTokensFromRefreshToken(
   refreshToken: string,
   req: TypedRequest<unknown>,
   res: Response,
-  next: NextFunction
+  callback: Function
 ): Promise<void> {
   verifyToken(refreshToken, PUB_KEY_REFRESH_TOKEN)
-    .then((jwt: JWT) => issueNewAuthCookies(jwt.sub, req, res, next))
+    .then((jwt: JWT) => issueNewAuthTokens(jwt.sub, req, res, callback))
     .catch(() => res.sendStatus(401));
 }
 
-export async function verifyAccessToken(
+export async function authMiddleware(
   req: TypedRequest<unknown>,
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  const accessToken: string = getCookieValue(req, Cookie.AccessToken);
+  const accessToken: string =
+    getCookieValue(req, Cookie.AccessToken) || getAuthHeaderValue(req);
   const refreshToken: string = getCookieValue(req, Cookie.RefreshToken);
 
   if (!accessToken && !refreshToken) {
@@ -152,7 +139,7 @@ export async function verifyAccessToken(
   }
 
   if (!accessToken && refreshToken) {
-    issueAuthCookiesFromRefreshToken(refreshToken, req, res, next);
+    issueAuthTokensFromRefreshToken(refreshToken, req, res, next);
     return;
   }
 
@@ -162,8 +149,8 @@ export async function verifyAccessToken(
       next();
     })
     .catch((e: Error) => {
-      if (e instanceof TokenExpiredError) {
-        issueAuthCookiesFromRefreshToken(refreshToken, req, res, next);
+      if (e instanceof TokenExpiredError && refreshToken) {
+        issueAuthTokensFromRefreshToken(refreshToken, req, res, next);
       } else {
         logger.log('[verifyAccessToken]', e);
         res.sendStatus(401);
@@ -181,24 +168,3 @@ export async function verifyToken(token: string, key: string): Promise<JWT> {
     )
   );
 }
-
-// export async function generateNewKeys(
-//   req: TypedRequest<null>
-// ): Promise<boolean> {
-//   const accessToken = getCookieValue(req, Cookie.AccessToken);
-//   if (!accessToken) return false;
-
-//   const jwt: JWT | void = await verifyToken(
-//     accessToken,
-//     PUB_KEY_ACCESS_TOKEN
-//   ).catch((e) => logger.log('[generateNewKeys]', e));
-//   const adminUser = await User.findOne({ email: 'admin' });
-
-//   if (!jwt || !adminUser) return false;
-
-//   const isAdmin = jwt.sub == adminUser.get('id');
-//   if (isAdmin) {
-//     generateNewKeyPair();
-//   }
-//   return isAdmin;
-// }

@@ -46,7 +46,7 @@ import cors from 'cors';
 const logger = new Logger(__filename);
 
 const todosRouter = Router();
-todosRouter.use(authUtils.verifyAccessToken);
+todosRouter.use(authUtils.authMiddleware);
 todosRouter.use(cors());
 
 /**
